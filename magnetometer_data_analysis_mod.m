@@ -343,8 +343,8 @@ end
     end
  end
 %save('quick_succession_crossings','data')
-save('qs','qs_data')
-save('nqs','nqs_data')
+%save('qs','qs_data')
+%save('nqs','nqs_data')
 %all_model_data = data;
 how_many_boundaries
 %modeled 388

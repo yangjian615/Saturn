@@ -1,5 +1,5 @@
 function [regions_boundary_data] = get_location_regions_boundary_data()    
-    location_path_Name = '/home/computation/Documents/MATLAB/Saturn_power_spectrum2/';
+    location_path_Name = '/home/computation/GitProjects/Saturn/';
     boundary_file_name = 'Delamere_bc_ids-2.txt';
     
     boundary_formatSpec = ['%d %d %d %d %d %d %d'];
