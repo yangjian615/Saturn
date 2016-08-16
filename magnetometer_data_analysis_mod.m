@@ -26,8 +26,9 @@ num_of_bad_slopes = 0;
 
 region = 'beginning';
 position = 0;
-qs_data = zeros(2,1);
-nqs_data = zeros(2,1);
+data = zeros(19,1);
+%qs_data = zeros(2,1);
+%nqs_data = zeros(2,1);
 mag_data = zeros(600,1,4);
 q = 0;
 p = 0;
@@ -37,7 +38,7 @@ how_many_boundaries = 0;
 moments = get_LANL_moments();
 
 if ~mag_is_1_sheath_is_0
-    [coeffs_density,coeffs_T,coeffs_v_r_rel,coeffs_v_phi_rel] = models_for_sheath();
+    [coeffs_density,coeffs_T,coeffs_v_r_rel,coeffs_v_phi_rel_dawn,coeffs_v_phi_rel_dusk,split] = models_for_sheath();
 end
 
 %for i=2:number_of_files
@@ -61,9 +62,9 @@ end
 
         clearvars -except location_data regions_boundary_data mag_data_atalysis_fileID magnetometer_data i length_of_window... 
             coeffs_density coeffs_T num_of_bad_locations num_of_bad_slopes save_data formatSpec_w boundaries_in_file...
-            crossing_date dates j do_it length_of_magnetometer_data coeffs_v_r_rel coeffs_v_phi_rel ordered_crossings...
+            crossing_date dates j do_it length_of_magnetometer_data coeffs_v_r_rel coeffs_v_phi_rel_dawn coeffs_v_phi_rel_dusk... 
             boundaries_inside number_of_crossings position region q data mag_is_1_sheath_is_0 mag_data...
-            how_many_boundaries moments modeled moment start p qs_data nqs_data
+            how_many_boundaries moments modeled moment start p qs_data nqs_data split ordered_crossings
  
         [windows] = window_finder(boundaries_in_file,j,number_of_crossings);
         index_of_crossing = find(dates == boundaries_in_file(8,j));
@@ -127,6 +128,11 @@ end
             %particular crossing
             %if isnan(density) || isnan(T) || isnan(v_r_rel) || isnan(v_phi_rel)
                 v_r_rel = 1000*polyval(coeffs_v_r_rel,bound_LT_and_r(1,1));%convert m/s
+                if 2*bound_LT_and_(1,1) >= split
+                    coeffs_v_phi_rel = coeffs_v_phi_rel_dawn
+                else
+                    coeffs_v_phi_rel = coeffs_v_phi_rel_dusk
+                end
                 v_phi_rel = 1000*polyval(coeffs_v_phi_rel,bound_LT_and_r(1,1));
                 density = polyval(coeffs_density,bound_LT_and_r(1,1))*(.001/6.022140857e23); %convert number density to mass density
                 T = 11600*polyval(coeffs_T,bound_LT_and_r(1,1)); %convert eV to K
@@ -160,9 +166,9 @@ end
                         clearvars -except location_data regions_boundary_data mag_data_atalysis_fileID magnetometer_data...
                             i length_of_window do_it mag_data coeffs_density coeffs_T num_of_bad_locations num_of_bad_slopes...
                             save_data formatSpec_w boundaries_in_file crossing_date dates j ordered_crossings...
-                            length_of_magnetometer_data coeffs_v_phi_rel coeffs_v_r_rel boundaries_inside mag_data_to_analyze...
+                            length_of_magnetometer_data coeffs_v_phi_rel_dawn coeffs_v_phi_rel_dusk coeffs_v_r_rel...
                             index_of_crossing region windows k number_of_crossings position data q v_phi_rel v_r_rel density T...
-                            mag_is_1_sheath_is_0 how_many_boundaries moments modeled moment start
+                            mag_is_1_sheath_is_0 how_many_boundaries moments modeled moment start split  boundaries_inside mag_data_to_analyze
 
                         location_initial(1:6,1) = mag_data_to_analyze(1:6,1);
                         location_initial(7:13,1) = location_data(5:11, location_data(1,:) == mag_data_to_analyze(1,1) ...
