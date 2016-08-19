@@ -12,7 +12,7 @@ function [regions_boundary_data] = get_location_regions_boundary_data()
     
     regions_boundary_data = fscanf(boundary_fileID,boundary_formatSpec,boundary_data_size);
     
-    fclose(boundary_fileID)
+    fclose(boundary_fileID);
 
 %     date_of_location = datetime(datenum(location_data_read(1,:), month(location_data_read(2,:)), day(location_data_read(2,:)), location_data_read(3,:), location_data_read(4,:), floor(location_data_read(5,:))), 'ConvertFrom', 'datenum');
 

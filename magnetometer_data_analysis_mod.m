@@ -6,8 +6,10 @@ clear all
 format long
 
 number_of_files = 181;
-length_of_window = 3600/6;
-mag_is_1_sheath_is_0 = 0;    
+length_of_window = 3600/6; 
+max_windows = 20;
+mag_is_1_sheath_is_0 = 0;
+avoid_boundary_offset = length_of_window/5;
 
 % formatSpec_w = ['%d-%02d-%02dT%02d:%02d:%02.2f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %8.3f %8.3f %10.3e %4d\t %12.3e %10.3e %10.3e\n'];
 [location_data] = get_location_data(); 
@@ -29,9 +31,9 @@ position = 0;
 data = zeros(19,1);
 %qs_data = zeros(2,1);
 %nqs_data = zeros(2,1);
-mag_data = zeros(600,1,4);
+%mag_data = zeros(600,1,4);
 q = 0;
-p = 0;
+%p = 0;
 modeled = 0;
 moment = 0;
 how_many_boundaries = 0;
@@ -63,11 +65,13 @@ end
         clearvars -except location_data regions_boundary_data mag_data_atalysis_fileID magnetometer_data i length_of_window... 
             coeffs_density coeffs_T num_of_bad_locations num_of_bad_slopes save_data formatSpec_w boundaries_in_file...
             crossing_date dates j do_it length_of_magnetometer_data coeffs_v_r_rel coeffs_v_phi_rel_dawn coeffs_v_phi_rel_dusk... 
-            boundaries_inside number_of_crossings position region q data mag_is_1_sheath_is_0 mag_data...
-            how_many_boundaries moments modeled moment start p qs_data nqs_data split ordered_crossings
+            boundaries_inside number_of_crossings position region q data mag_is_1_sheath_is_0 mag_data avoid_boundary_offset...
+            how_many_boundaries moments modeled moment start p qs_data nqs_data split ordered_crossings max_windows
  
-        [windows] = window_finder(boundaries_in_file,j,number_of_crossings);
+        [windows] = window_finder(boundaries_in_file,j,number_of_crossings,length_of_window/60,max_windows);
         index_of_crossing = find(dates == boundaries_in_file(8,j));
+
+%spatial distribution of crossings
 %{
         if ~isempty(index_of_crossing)
             bound_LT_and_r  = location_data(10:11, location_data(1,:) == magnetometer_data(1,index_of_crossing)...
@@ -83,32 +87,33 @@ end
                 nqs_data(1,p) = bound_LT_and_r(1,1);
                 nqs_data(2,p) = bound_LT_and_r(2,1);
             end
-%}       
-%{        
+ %}      
+ %{       
 %magnetosphere     
         if (windows > 1) && ~isempty(index_of_crossing) 
         %if windows < 5 
             how_many_boundaries = how_many_boundaries + 1;
-            for k = 1:min([20,windows])        
+            for k = 1:min([max_windows,windows])        
                 do_it = false;
-                if boundaries_in_file(7,j) == 1 && ((index_of_crossing + length_of_window/5) + k*length_of_window - 1 <= length_of_magnetometer_data)
+                if boundaries_in_file(7,j) == 1 && ((index_of_crossing + avoid_boundary_offset) + k*length_of_window - 1 <= length_of_magnetometer_data)
                     %fft starting at beginning of interval
-                    mag_data_to_analyze = magnetometer_data(:, (index_of_crossing + length_of_window/5) +... 
-                        (k - 1)*length_of_window:(index_of_crossing + length_of_window/5) + k*length_of_window - 1);
+                    mag_data_to_analyze = magnetometer_data(:, (index_of_crossing + avoid_boundary_offset) +... 
+                        (k - 1)*length_of_window:(index_of_crossing + avoid_boundary_offset) + k*length_of_window - 1);
                     region = 'Sheath to Magnetosphere ';
                     position = k;
                     do_it =  true;
-                elseif boundaries_in_file(7,j) == 2 && (index_of_crossing - length_of_window/5 - (min([20,windows])-k+1)*length_of_window >= 0)
+                elseif boundaries_in_file(7,j) == 2 && (index_of_crossing - avoid_boundary_offset - (min([max_windows,windows])-k+1)*length_of_window >= 0)
                    %needs to end at start of interval
-                    mag_data_to_analyze = magnetometer_data(:, (index_of_crossing - length_of_window/5) -...
-                        (min([20,windows])-k+1)*length_of_window:(index_of_crossing - length_of_window/5) -...
-                        (min([20,windows])-k)*length_of_window-1);
+                    mag_data_to_analyze = magnetometer_data(:, (index_of_crossing - avoid_boundary_offset) -...
+                        (min([max_windows,windows])-k+1)*length_of_window:(index_of_crossing - avoid_boundary_offset) -...
+                        (min([max_windows,windows])-k)*length_of_window-1);
                     region = 'Magnetosphere to Sheath ';
-                    position = min([20,windows])-k+1;
+                    position = min([max_windows,windows])-k+1;
                     do_it = true;
                 end 
 %}                     
         %magnetosheath
+
         if windows > 1 && ~isempty(index_of_crossing) 
             how_many_boundaries = how_many_boundaries + 1;
             %to determine sheath flow always at boundary
@@ -120,22 +125,21 @@ end
             %uses an average of all available times in sheath after
             %boundary crossing so all windows after a boundary have
             %constant density temp and v
-            %[density,T,v_r_rel,v_phi_rel] = find_moment_data(start+j-1,ordered_crossings,moments);
-            %start + j - 1
-            
+            [density,T,v_r_rel,v_phi_rel] = find_moment_data(start+j-1,ordered_crossings,moments);
+
             %can calculate v temp and density for every window or as above
             %where all values are the same for windows attached to a
             %particular crossing
             %if isnan(density) || isnan(T) || isnan(v_r_rel) || isnan(v_phi_rel)
                 v_r_rel = 1000*polyval(coeffs_v_r_rel,bound_LT_and_r(1,1));%convert m/s
-                if 2*bound_LT_and_(1,1) >= split
-                    coeffs_v_phi_rel = coeffs_v_phi_rel_dawn
+                if 2*bound_LT_and_r(1,1) >= split
+                    coeffs_v_phi_rel = coeffs_v_phi_rel_dawn;
                 else
-                    coeffs_v_phi_rel = coeffs_v_phi_rel_dusk
+                    coeffs_v_phi_rel = coeffs_v_phi_rel_dusk;
                 end
-                v_phi_rel = 1000*polyval(coeffs_v_phi_rel,bound_LT_and_r(1,1));
-                density = polyval(coeffs_density,bound_LT_and_r(1,1))*(.001/6.022140857e23); %convert number density to mass density
-                T = 11600*polyval(coeffs_T,bound_LT_and_r(1,1)); %convert eV to K
+            %    v_phi_rel = 1000*polyval(coeffs_v_phi_rel,bound_LT_and_r(1,1));
+            %    density = polyval(coeffs_density,bound_LT_and_r(1,1))*(.001/6.022140857e23); %convert number density to mass density
+            %    T = 11600*polyval(coeffs_T,bound_LT_and_r(1,1)); %convert eV to K
             %    modeled = modeled + 1;
             %else
             %    moment = moment + 1;
@@ -144,29 +148,29 @@ end
             %my poor useless model (requires density and temp models)
             %[v_phi_rel, v_r_rel] = get_v_rel_sheath(bound_LT_and_r(2,1),2*pi*(bound_LT_and_r(1,1)/24)-pi);
                
-            for k = 1:min([20,windows])
+            for k = 1:min([max_windows,windows])
                 do_it = false;
-                if boundaries_in_file(7,j) == 2 && ((index_of_crossing + length_of_window/5) + k*length_of_window - 1) <= length_of_magnetometer_data
-                    mag_data_to_analyze = magnetometer_data(:, (index_of_crossing + length_of_window/5) +... 
-                        (k - 1)*length_of_window:(index_of_crossing + length_of_window/5) + k*length_of_window - 1);
+                if boundaries_in_file(7,j) == 2 && ((index_of_crossing + avoid_boundary_offset) + k*length_of_window - 1) <= length_of_magnetometer_data
+                    mag_data_to_analyze = magnetometer_data(:, (index_of_crossing + avoid_boundary_offset) +... 
+                        (k - 1)*length_of_window:(index_of_crossing + avoid_boundary_offset) + k*length_of_window - 1);
                     region = 'Magnetosphere to Sheath ';
                     position = k;
                     do_it = true;
-                elseif boundaries_in_file(7,j) == 1 && ((index_of_crossing - length_of_window/5) - (min([20,windows])-k)*length_of_window-1) >= 0
-                    mag_data_to_analyze = magnetometer_data(:, (index_of_crossing - length_of_window/5) -...
-                        (min([20,windows])-k+1)*length_of_window:(index_of_crossing - length_of_window/5) -...
-                        (min([20,windows])-k)*length_of_window-1);
+                elseif boundaries_in_file(7,j) == 1 && ((index_of_crossing - avoid_boundary_offset) - (min([max_windows,windows])-k)*length_of_window-1) >= 0
+                    mag_data_to_analyze = magnetometer_data(:, (index_of_crossing - avoid_boundary_offset) -...
+                        (min([max_windows,windows])-k+1)*length_of_window:(index_of_crossing - avoid_boundary_offset) -...
+                        (min([max_windows,windows])-k)*length_of_window-1);
                     region = 'Sheath to Magnetosphere ';
-                    position = min([20,windows])-k+1;
+                    position = min([max_windows,windows])-k+1;
                     do_it = true;
                 end
-                
+  
                 if do_it
                     try
                         clearvars -except location_data regions_boundary_data mag_data_atalysis_fileID magnetometer_data...
                             i length_of_window do_it mag_data coeffs_density coeffs_T num_of_bad_locations num_of_bad_slopes...
-                            save_data formatSpec_w boundaries_in_file crossing_date dates j ordered_crossings...
-                            length_of_magnetometer_data coeffs_v_phi_rel_dawn coeffs_v_phi_rel_dusk coeffs_v_r_rel...
+                            save_data formatSpec_w boundaries_in_file crossing_date dates j ordered_crossings max_windows...
+                            length_of_magnetometer_data coeffs_v_phi_rel_dawn coeffs_v_phi_rel_dusk coeffs_v_r_rel avoid_boundary_offset...
                             index_of_crossing region windows k number_of_crossings position data q v_phi_rel v_r_rel density T...
                             mag_is_1_sheath_is_0 how_many_boundaries moments modeled moment start split  boundaries_inside mag_data_to_analyze
 
@@ -320,8 +324,9 @@ end
                         %mag_data(:,q,3) = B_phi;
                         %mag_data(:,q,4) = B_tot;
 
+                   
                     catch
-                        magnetic_field_boundary_ID = [-4, -4];
+                        magnetic_field_boundary_ID = [-4, -4]
                         num_of_bad_locations = num_of_bad_locations + 1;
 
                         tau = 50; %s
@@ -342,22 +347,24 @@ end
                         power_spectrum_MHD = 0;
                         power_spectrum_KAW = 0;
 
-                    end
+                    end 
                 end
             end 
         end
     end
  end
-%save('quick_succession_crossings','data')
 %save('qs','qs_data')
 %save('nqs','nqs_data')
-%all_model_data = data;
+
+%allmodel_15mins_sheath = data;
+%momentmodel_15mins_sheath = data;
+%allmodel_10mins_sheath = data;
+%momentmodel_10mins_sheath = data;
+%mins15_mag = data;
+%mins10_mag = data;
+
 how_many_boundaries
-%modeled 388
-%moment 1055
-%save('test_data','all_model_data');
-%save('mag_data_proper_magsphere','mag_data');
-%plot_data(data);
+save('allmodel_10mins_sheath','allmodel_10mins_sheath');
 
 %q per given local time as a function of window number from boundary
 %for i = 10:96

@@ -14,8 +14,8 @@ function [coeff_MHD, coeff_KAW, f_MHD, f_KAW, power_spectrum_MHD, power_spectrum
             %coeff_MHD = coeffvalues(fit(log(f_MHD.'), log(power_spectrum_MHD.'), 'poly1'));
             %coeff_KAW = coeffvalues(fit(log(f_KAW.'), log(power_spectrum_KAW.'), 'poly1')); 
             
-            coeff_MHD = fit(1,log(f_MHD.'), log(power_spectrum_MHD.'));
-            coeff_KAW = fit(1,log(f_KAW.'), log(power_spectrum_KAW.')); 
+            coeff_MHD = polyfit(log(f_MHD.'), log(power_spectrum_MHD.'),1);
+            coeff_KAW = polyfit(log(f_KAW.'), log(power_spectrum_KAW.'),1); 
             
 %             coeff_MHD = coeffvalues(fit(f1_slope.', power_spectrum_1_slope.', 'power1')); 
 %             coeff_KAW = coeffvalues(fit(f2_slope.', power_spectrum_2_slope.', 'power1'));
@@ -23,11 +23,11 @@ function [coeff_MHD, coeff_KAW, f_MHD, f_KAW, power_spectrum_MHD, power_spectrum
             coeff_MHD = [0, 0];
             f_MHD = [];
             power_spectrum_MHD = [];
-            coeff_KAW = (fit(1,log(f_KAW.'), log(power_spectrum_KAW.')));  
+            coeff_KAW = polyfit(log(f_KAW.'), log(power_spectrum_KAW.'),1);  
             %coeff_KAW = coeffvalues(fit(log(f_KAW.'), log(power_spectrum_KAW.'), 'poly1'));  
 %             coeff_KAW = coeffvalues(fit(f2_slope.', power_spectrum_2_slope.', 'power1'));
         elseif length(f_KAW) < 5 & length_f_MHD > 5
-            coeff_MHD = fit(1,log(f_MHD.'), log(power_spectrum_MHD.'));
+            coeff_MHD = polyfit(log(f_MHD.'), log(power_spectrum_MHD.'),1);
             %coeff_MHD = coeffvalues(fit(log(f_MHD.'), log(power_spectrum_MHD.'), 'poly1'));
 %             coeff_MHD = coeffvalues(fit(f1_slope.', power_spectrum_1_slope.', 'power1')); 
             coeff_KAW = [0, 0];

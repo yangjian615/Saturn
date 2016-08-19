@@ -99,8 +99,8 @@ function [density,temperature,v_r,v_phi_dawn,v_phi_dusk,v_phi_split] = models_fo
     total_points_v_r = v_r_pos_points + v_r_neg_points;
     total_points_v_phi =  v_phi_pos_points + v_phi_neg_points;
 
-    this_is_sketchy2 = avg_model_data_v_r_pos.*(v_r_pos_points./total_points_v_r) + avg_model_data_v_r_neg.*(v_r_neg_points./total_points_v_r);
-    this_is_sketchy = avg_model_data_v_phi_pos.*(v_phi_pos_points./total_points_v_phi) + avg_model_data_v_phi_neg.*(v_phi_neg_points./total_points_v_phi);
+    avg_model_data_vr = avg_model_data_v_r_pos.*(v_r_pos_points./total_points_v_r) + avg_model_data_v_r_neg.*(v_r_neg_points./total_points_v_r);
+    avg_model_data_v_phi = avg_model_data_v_phi_pos.*(v_phi_pos_points./total_points_v_phi) + avg_model_data_v_phi_neg.*(v_phi_neg_points./total_points_v_phi);
 
     density_first = find(~isnan(avg_model_data_density),1,'first');
     density_last = find(~isnan(avg_model_data_density),1,'last');
@@ -108,20 +108,25 @@ function [density,temperature,v_r,v_phi_dawn,v_phi_dusk,v_phi_split] = models_fo
     temp_first = find(~isnan(avg_model_data_T),1,'first');
     temp_last = find(~isnan(avg_model_data_T),1,'last');
 
-    v_r_first = find(~isnan(this_is_sketchy2),1,'first');
-    v_r_last = find(~isnan(this_is_sketchy2),1,'last');
+    v_r_first = find(~isnan(avg_model_data_vr),1,'first');
+    v_r_last = find(~isnan(avg_model_data_vr),1,'last');
 
-    v_phi_neg_first = find(~isnan(this_is_sketchy) & this_is_sketchy < 0,1,'first');
-    v_phi_neg_last = find(~isnan(this_is_sketchy) & this_is_sketchy < 0,1,'last');
+    v_phi_neg_first = find(~isnan(avg_model_data_v_phi) & avg_model_data_v_phi < 0,1,'first');
+    v_phi_neg_last = find(~isnan(avg_model_data_v_phi) & avg_model_data_v_phi < 0,1,'last');
     v_phi_pos_first = v_phi_neg_last + 1;
-    v_phi_pos_last = find(~isnan(this_is_sketchy),1,'last');
+    v_phi_pos_last = find(~isnan(avg_model_data_v_phi),1,'last');
 
     interp_density = interp1(find(~isnan(avg_model_data_density)),avg_model_data_density(~isnan(avg_model_data_density)),density_first:density_last);
     interp_temp = interp1(find(~isnan(avg_model_data_T)),avg_model_data_T(~isnan(avg_model_data_T)),temp_first:temp_last);
-    interp_vr = interp1(find(~isnan(this_is_sketchy2)),this_is_sketchy2(~isnan(this_is_sketchy2)),v_r_first:v_r_last);
-    interp_vphi_pos = interp1(find(~isnan(this_is_sketchy)),this_is_sketchy(~isnan(this_is_sketchy)),v_phi_pos_first:v_phi_pos_last);
-    interp_vphi_neg = interp1(find(~isnan(this_is_sketchy)),this_is_sketchy(~isnan(this_is_sketchy)),v_phi_neg_first:v_phi_neg_last);
+    interp_vr = interp1(find(~isnan(avg_model_data_vr)),avg_model_data_vr(~isnan(avg_model_data_vr)),v_r_first:v_r_last);
+    interp_vphi_pos = interp1(find(~isnan(avg_model_data_v_phi)),avg_model_data_v_phi(~isnan(avg_model_data_v_phi)),v_phi_pos_first:v_phi_pos_last);
+    interp_vphi_neg = interp1(find(~isnan(avg_model_data_v_phi)),avg_model_data_v_phi(~isnan(avg_model_data_v_phi)),v_phi_neg_first:v_phi_neg_last);
 
+    smooth_density = transpose(smooth(interp_density));
+    smooth_temp = transpose(smooth(interp_temp));
+    smooth_vr = transpose(smooth(interp_vr));
+    smooth_vphi_pos = transpose(smooth(interp_vphi_pos));
+    smooth_vphi_neg = transpose(smooth(interp_vphi_neg));
 
     %for i = 1:100
         %avg_model_data_r(i) = mean(model_data(floor(model_data(:,6)) == i,3)); %temp as a function of r
@@ -133,15 +138,15 @@ function [density,temperature,v_r,v_phi_dawn,v_phi_dusk,v_phi_split] = models_fo
     %figure
     %plot(1:100,avg_model_data_r)
 
-    p1 = polyfit(temp_first:temp_last,interp_temp,2);
-    p2 = polyfit(density_first:density_last,interp_density,2);
-    p3 = polyfit(v_r_first:v_r_last,interp_vr,3);
-    p4 = polyfit(v_phi_pos_first:v_phi_pos_last,interp_vphi_pos,3);
-    p5 = polyfit(v_phi_neg_first:v_phi_neg_last,interp_vphi_neg,3);
+    p1 = polyfit(temp_first:temp_last,smooth_temp,2);
+    p2 = polyfit(density_first:density_last,smooth_density,2);
+    p3 = polyfit(v_r_first:v_r_last,smooth_vr,3);
+    p4 = polyfit(v_phi_pos_first:v_phi_pos_last,smooth_vphi_pos,3);
+    p5 = polyfit(v_phi_neg_first:v_phi_neg_last,smooth_vphi_neg,3);
 
     figure
     %plot(1:72,avg_model_data_v_r_pos(1:72))
-    plot(v_r_first:v_r_last,interp_vr)
+    plot(v_r_first:v_r_last,smooth_vr)
     line([slices/2 slices/2],[-40,160],'Color','r')
     title('v_r')
     hold on
@@ -157,8 +162,8 @@ function [density,temperature,v_r,v_phi_dawn,v_phi_dusk,v_phi_split] = models_fo
     line([slices/2 slices/2],[-300,300],'Color','r')
     hold on
     line([0 slices],[0,0],'Color','r')
-    plot(v_phi_pos_first:v_phi_pos_last,interp_vphi_pos)
-    plot(v_phi_neg_first:v_phi_neg_last,interp_vphi_neg)
+    plot(v_phi_pos_first:v_phi_pos_last,smooth_vphi_pos)
+    plot(v_phi_neg_first:v_phi_neg_last,smooth_vphi_neg)
     x1 = linspace(v_phi_pos_first,v_phi_pos_last);
     x2 = linspace(v_phi_neg_first,v_phi_neg_last);
     y2 = polyval(p4,x1);
@@ -169,7 +174,7 @@ function [density,temperature,v_r,v_phi_dawn,v_phi_dusk,v_phi_split] = models_fo
 
     figure
     %plot(1:72,avg_model_data_density(1:72)) 
-    plot(density_first:density_last,interp_density)
+    plot(density_first:density_last,smooth_density)
     line([slices/2 slices/2],[0,0.3],'Color','r')
     title('density')
     hold on
@@ -180,7 +185,7 @@ function [density,temperature,v_r,v_phi_dawn,v_phi_dusk,v_phi_split] = models_fo
 
     figure
     %plot(1:72,avg_model_data_T(1:72))
-    plot(temp_first:temp_last,interp_temp)
+    plot(temp_first:temp_last,smooth_temp)
     title('temperature')
     line([slices/2 slices/2],[0,600],'Color','r')
     hold on

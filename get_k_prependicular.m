@@ -4,7 +4,7 @@ function [k_prependicular] = get_k_prependicular(f, v_phi_rel, v_r_rel, B_vector
         v_rel = [0, 0, v_phi_rel];
     else
         %within 10 degress of latitude from subsolar point v_theta is zero
-        v_rel = [v_r_rel, v_phi_rel, 0];
+        v_rel = [v_r_rel, 0, v_phi_rel];
     end
     
     v_rel_mag = sqrt(v_rel(1)^2 + v_rel(2)^2 + v_rel(3)^2);
