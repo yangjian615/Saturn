@@ -11,6 +11,14 @@ max_windows = 20;
 mag_is_1_sheath_is_0 = 0;
 avoid_boundary_offset = 120;
 
+ion_molar_mass = 18.01528e-3; %kg/mol (water)
+avagdro_number = 6.022140857e23;    
+ion_mass = ion_molar_mass/avagdro_number;
+k_B = 1.3806488e-23; %J/K
+Z = 1;
+e = 1.60217657e-19; %coulombs
+Rs = 60268e3; %m
+
 % formatSpec_w = ['%d-%02d-%02dT%02d:%02d:%02.2f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %8.3f %8.3f %10.3e %4d\t %12.3e %10.3e %10.3e\n'];
 [location_data] = get_location_data(); 
 
@@ -113,7 +121,6 @@ end
                 end 
 %}                     
         %magnetosheath
-
         if windows > 1 && ~isempty(index_of_crossing) 
             how_many_boundaries = how_many_boundaries + 1;
             %to determine sheath flow always at boundary
@@ -227,22 +234,23 @@ end
 
                         B_vector_mean = get_B_vector_mean(B_r_mean, B_theta_mean, B_phi_mean);
                         [B_fluctuation_parallel, B_fluctuation_perp, B_std_parallel, B_std_perp] = get_B_std_vector_components(B_vector_mean, B_r, B_theta, B_phi);
-                        B_total_std = B_std_perp;
-
-                        [gyration_frequency] = get_gyration_frequency(B_tot,mag_is_1_sheath_is_0);  
-
-                        [f, power_spectrum] = get_power_spectrum_mod(B_fluctuation_perp, B_total_std);
-            %           [f, power_spectrum] = get_power_spectrum(B_fluctuation_perp(1,:), B_fluctuation_perp(2,:), B_fluctuation_perp(3,:), B_tot, B_total_std);      
-
-                        Rs = 60268e3; %m
                         tau = 50; %s
+
+                        B_total_std = B_std_perp;
+                        delta_t = 1;
+
+                        [f, power_spectrum_morlet] = get_power_spectrum_morlet(B_fluctuation_perp, B_std_perp, delta_t);
+                        [f, power_spectrum_fft] = get_power_spectrum_fft(B_fluctuation_perp, B_std_perp, delta_t);
+
+                        [gyration_frequency] = get_gyration_frequency(B_tot,mag_is_1_sheath_is_0);
 
                         %is this the same in sheath?
                         H = get_scale_height(location_initial(13));
 
                         if mag_is_1_sheath_is_0
                             [v_phi_rel, v_r_rel] = get_v_rel(location_initial(13));
-                            density = get_density(location_initial(10), H, location_initial(13));
+                            number_density = get_density(location_initial(10), H, location_initial(13));
+                            density = number_density*ion_mass;
                             T = get_temperature(H);
                         else
                             %density = polyval(coeffs_density,location_initial(12))*(.001/6.022140857e23); %convert number density to mass density
@@ -260,16 +268,15 @@ end
                         %l_parallel = H*Rs;
                         l_prependicular = get_magnetic_field_prependicular_length(tau, v_phi_rel, v_r_rel,mag_is_1_sheath_is_0);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                        q_KAW_delB = get_heating_coefficient_KAW(B_total_std, larmor_radius, density, v_phi_rel, v_r_rel, tau, mag_is_1_sheath_is_0);
+                        q_KAW_delB = get_heating_coefficient_KAW(B_total_std, larmor_radius, density, v_phi_rel, l_prependicular);
                         %q_MHD_delB = get_heating_coefficient_MHD(B_total_std, B_total_mean, density, l_parallel, l_prependicular);
                         q_MHD_strong_delB = get_heating_coefficient_MHD_strong(B_total_std, B_total_mean, density, l_prependicular);
 
-            %           [coeff_1_line, coeff_2_line, coeff_1_power, coeff_2_power, f1, f2, power_spectrum_1, power_spectrum_2] = get_power_spectrum_slopes(f, power_spectrum, gyration_frequency);
-                        [coeff_MHD, coeff_KAW, f_MHD, f_KAW, power_spectrum_MHD, power_spectrum_KAW] = get_power_spectrum_slopes(f, power_spectrum, gyration_frequency);      
-
+                        [coeff_MHD, coeff_KAW, f_MHD, f_KAW, power_spectrum_MHD, power_spectrum_KAW] = get_power_spectrum_slopes(f, power_spectrum_morlet, gyration_frequency);      
+                        %[coeff_MHD, coeff_KAW, f_MHD, f_KAW, power_spectrum_MHD, power_spectrum_KAW] = get_power_spectrum_slopes(f, power_spectrum_fft, gyration_frequency);       
+    
                         k_prependicular_MHD = get_k_prependicular(f_MHD, v_phi_rel, v_r_rel, B_vector_mean,mag_is_1_sheath_is_0);
                         k_prependicular_KAW = get_k_prependicular(f_KAW, v_phi_rel, v_r_rel, B_vector_mean,mag_is_1_sheath_is_0);
-
                         %Khi = get_Khi(B_total_std, B_total_mean, l_parallel, l_prependicular);
 
                         q_hybrid = 0;
@@ -287,7 +294,6 @@ end
 
                         if  length(f_KAW) > 0
                             [q_KAW_PS, q_KAW] = get_heating_coefficient_KAW_PS(B_total_std, power_spectrum_KAW, f_KAW, larmor_radius, density, k_prependicular_KAW);
-
                             q_hybrid = q_KAW;    
                         else
                             q_KAW_PS = [];
@@ -323,12 +329,10 @@ end
                         %mag_data(:,q,2) = B_theta;
                         %mag_data(:,q,3) = B_phi;
                         %mag_data(:,q,4) = B_tot;
-
-                   
+    
                     catch
                         magnetic_field_boundary_ID = [-4, -4]
                         num_of_bad_locations = num_of_bad_locations + 1;
-
                         tau = 50; %s
                         H = 0;
                         density = 0;
@@ -346,7 +350,6 @@ end
                         f_KAW = 0;
                         power_spectrum_MHD = 0;
                         power_spectrum_KAW = 0;
-
                     end 
                 end
             end 
