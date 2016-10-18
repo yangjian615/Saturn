@@ -1,8 +1,8 @@
 function plot_data(mag_data,sheath_data,max_windows)
 magsphere_LT_windows = 0;
 sheath_LT_windows = 0;
-plot_plot_plot = false;
-how_many_windows = 14;
+plot_plot_plot = true;
+how_many_windows = 20;
 h = max_windows/how_many_windows;
 time_resolution = 60;
 slices = 24*(60/time_resolution);
@@ -60,31 +60,16 @@ for w = 1:2
             else
                 M_or_K = 2;
             end
-            %latitude
             if (90 + f_data(17,y)) > 79 && (90 + f_data(17,y)) < 101
-                %if color_plot(floor(90 + f_data(17,y)),ceil(f_data(3,y)/h),1)*f_data(M_or_K,y)/avoid_zeros ~= 0
+                %latitude
                     color_plot(floor(90 + f_data(17,y)),ceil(f_data(3,y)/h),1) = color_plot(floor(90 + f_data(17,y)),ceil(f_data(3,y)/h),1) + log(f_data(M_or_K,y));
                     color_plot(floor(90 + f_data(17,y)),ceil(f_data(3,y)/h),2) = color_plot(floor(90 + f_data(17,y)),ceil(f_data(3,y)/h),2) + 1;
-                %else
-                %    color_plot_(floor(90 + f_data(17,y)),ceil(f_data(3,y)/h),1) = color_plot_(floor(90 + f_data(17,y)),ceil(f_data(3,y)/h),1)*f_data(M_or_K,y)/avoid_zeros;
-                %    color_plot_(floor(90 + f_data(17,y)),ceil(f_data(3,y)/h),2) = color_plot_(floor(90 + f_data(17,y)),ceil(f_data(3,y)/h),2) + 1;
-                %end
                 %LT
-                %if color_plot3(LT_index,ceil(f_data(3,y)/h),1)*f_data(M_or_K,y)/avoid_zeros ~= 0
                     color_plot3(LT_index,ceil(f_data(3,y)/h),1) = color_plot3(LT_index,ceil(f_data(3,y)/h),1) + log(f_data(M_or_K,y));
                     color_plot3(LT_index,ceil(f_data(3,y)/h),2) = color_plot3(LT_index,ceil(f_data(3,y)/h),2) + 1;
-                %else
-                %    color_plot3_(LT_index,ceil(f_data(3,y)/h),1) = color_plot3_(LT_index,ceil(f_data(3,y)/h),1)*f_data(M_or_K,y)/avoid_zeros;
-                %    color_plot3_(LT_index,ceil(f_data(3,y)/h),2) = color_plot3_(LT_index,ceil(f_data(3,y)/h),2) + 1;
-                %end
                 %radial
-                %if color_plot5(floor(f_data(5,y)),ceil(f_data(3,y)/h),1)*f_data(M_or_K,y)/avoid_zeros ~= 0
                     color_plot5(floor(f_data(5,y)),ceil(f_data(3,y)/h),1) = color_plot5(floor(f_data(5,y)),ceil(f_data(3,y)/h),1) + log(f_data(M_or_K,y)); 
                     color_plot5(floor(f_data(5,y)),ceil(f_data(3,y)/h),2) = color_plot5(floor(f_data(5,y)),ceil(f_data(3,y)/h),2) + 1;
-                %else
-                %    color_plot5_(floor(f_data(5,y)),ceil(f_data(3,y)/h),1) = color_plot5_(floor(f_data(5,y)),ceil(f_data(3,y)/h),1)*f_data(M_or_K,y)/avoid_zeros; 
-                %    color_plot5_(floor(f_data(5,y)),ceil(f_data(3,y)/h),2) = color_plot5_(floor(f_data(5,y)),ceil(f_data(3,y)/h),2) + 1;
-                %end
                 %standoff distance
                 if f_data(3,y) == 1
                     z = y;
@@ -97,8 +82,13 @@ for w = 1:2
                         else
                             index = 2*floor(R0)+1;
                         end
-                        color_plot7(index,1,1) = color_plot7(index,1,1) + log(f_data(1,z));
-                        color_plot7(index,1,2) = color_plot7(index,1,2) + 1;
+                        if  ~isinf(log(f_data(1,z)))
+                            color_plot7(index,1,1) = color_plot7(index,1,1) + log(f_data(1,z));
+                            color_plot7(index,1,2) = color_plot7(index,1,2) + 1;
+                        elseif ~isinf(log(f_data(2,z)))
+                            color_plot7(index,1,1) = color_plot7(index,1,1) + log(f_data(1,2));
+                            color_plot7(index,1,2) = color_plot7(index,1,2) + 1;
+                        end
                         if (z+1 < number_of_points && f_data(3,z+1) == f_data(3,z) + 1)  || (z > 1 && f_data(3,z-1) == f_data(3,z) + 1)
                             if z+1 < number_of_points && f_data(3,z+1) == f_data(3,z) + 1
                                 increment = 1;
@@ -106,22 +96,12 @@ for w = 1:2
                                 increment = - 1;
                             end                    
                             while(z + increment < number_of_points && z + increment > 0 && f_data(3,z+increment) == f_data(3,z) + 1)
-                                if f_data(1,z)
-                                    %if color_plot7(index,ceil(f_data(3,z+increment)/h),1)*f_data(1,z+increment) > 0
+                                if ~isinf(log(f_data(1,z + increment)))
                                         color_plot7(index,ceil(f_data(3,z+increment)/h),1) = color_plot7(index,ceil(f_data(3,z+increment)/h),1) + log(f_data(1,z+increment));
                                         color_plot7(index,ceil(f_data(3,z+increment)/h),2) = color_plot7(index,ceil(f_data(3,z+increment)/h),2) + 1;
-                                    %else
-                                    %    color_plot7_(index,ceil(f_data(3,z+increment)/h),1) = color_plot7_(index,ceil(f_data(3,z+increment)/h),1)*f_data(1,z+increment)/avoid_zeros;
-                                    %    color_plot7_(index,ceil(f_data(3,z+increment)/h),2) = color_plot7_(index,ceil(f_data(3,z+increment)/h),2) + 1;
-                                    %end
-                                elseif f_data(2,z)
-                                    %if color_plot7(index,ceil(f_data(3,z+increment)/h),1)*f_data(2,z+increment) > 0
+                                elseif ~isinf(log(f_data(2,z + increment)))
                                         color_plot7(index,ceil(f_data(3,z+increment)/h),1) = color_plot7(index,ceil(f_data(3,z+increment)/h),1) + log(f_data(2,z+increment));
                                         color_plot7(index,ceil(f_data(3,z+increment)/h),2) = color_plot7(index,ceil(f_data(3,z+increment)/h),2) + 1;
-                                    %else
-                                    %    color_plot7_(index,ceil(f_data(3,z+increment)/h),1) = color_plot7_(index,ceil(f_data(3,z+increment)/h),1)*f_data(2,z+increment)/avoid_zeros;
-                                    %    color_plot7_(index,ceil(f_data(3,z+increment)/h),2) = color_plot7_(index,ceil(f_data(3,z+increment)/h),2) + 1;
-                                    %end
                                 end
                                 z = z + increment;
                             end
@@ -131,6 +111,10 @@ for w = 1:2
             end
         end 
     end
+
+color_plot7(:,1,1)
+color_plot7(:,1,2)
+
 
     stats1 = color_plot(:,:,2);
     color_plot = color_plot(:,:,1);
@@ -150,23 +134,10 @@ for w = 1:2
     %color_plot7_ = color_plot7_(:,:,1);
 
     %compute geometric means
-    color_plot(stats1 == 1) = NaN;
-    color_plot3(stats2 == 1) = NaN;
-    color_plot5(stats3 == 1) = NaN;
-    color_plot7(stats4 == 1) = NaN;
-    %color_plot_(stats1_ == 1) = 1;
-    %color_plot3_(stats2_ == 1) = 1;
-    %color_plot5_(stats3_ == 1) = 1;
-    %color_plot7_(stats4_ == 1) = 1;
-    %total_points1 = stats1 + stats1_ - 2;
-    %total_points2 = stats2 + stats2_ - 2;
-    %total_points3 = stats3 + stats3_ - 2;
-    %total_points4 = stats4 + stats4_ - 2;
-
-    %color_plot = (avoid_zeros*color_plot.^(1./total_points1)).*(color_plot_.^(1./total_points1));
-    %color_plot3 = (avoid_zeros*color_plot3.^(1./total_points2)).*(color_plot3_.^(1./total_points2));
-    %color_plot5 = (avoid_zeros*color_plot5.^(1./total_points3)).*(color_plot5_.^(1./total_points3));
-    %color_plot7 = (avoid_zeros*color_plot7.^(1./total_points4)).*(color_plot7_.^(1./total_points4));
+    color_plot(stats1 == 0) = NaN;
+    color_plot3(stats2 == 0) = NaN;
+    color_plot5(stats3 == 0) = NaN;
+    color_plot7(stats4 == 0) = NaN;
 
     color_plot = exp(color_plot./stats1);
     color_plot3 = exp(color_plot3./stats2);

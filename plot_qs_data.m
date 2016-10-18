@@ -20,8 +20,8 @@ function [] = plot_qs_data(data_qs,data_nqs)
     r = 10.3*(Dp^(-0.20)).*(2./(1+cos(theta))).^(0.73 + 0.4*Dp);
     a = r.*cos(theta);
     b = r.*sin(theta);
-    plot(a,b);
-
+    plot(a,b,'k','LineWidth',2);
+%{
     z = zeros(size(a));
     col = log10(total(3:21));  % This is the color, vary with x in this case.
 
@@ -30,5 +30,5 @@ function [] = plot_qs_data(data_qs,data_nqs)
         'edgecol','interp',...
         'linew',2);
 
-
+%}
 hold off

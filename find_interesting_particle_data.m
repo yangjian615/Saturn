@@ -1,4 +1,4 @@
-function find_interesting_particle_data(data,mag_data)
+function find_interesting_particle_data(data)
 [t,number_of_points] = size(data);
 KAW_q_mean = mean(data(1,data(1,:) ~= 0));
 KAW_q_std = std(data(1,data(1,:) ~= 0));
@@ -182,8 +182,6 @@ for i = 1:points_of_interest
     close all
 end
 %}
-%anomolous B_phi values (should it be large compared to a local or global
-%mean>?????@?@@?!?!@?$>@?!?!) "Dominant" seems to indicate local
 for y = 1:number_of_points
     large_phi = 5*(data(7,y)^2 + data(6,y)^2);
     if data(8,y)^2 > large_phi && (data(3,y) == 1)
@@ -199,10 +197,10 @@ for y = 1:number_of_points
         
         figure
         hold on
-        plot(1:600,mag_data(:,y,1),'r')
-        plot(1:600,mag_data(:,y,2),'g')
-        plot(1:600,mag_data(:,y,3),'b')
-        plot(1:600,mag_data(:,y,4),'k')
+        %plot(1:600,mag_data(:,y,1),'r')
+        %plot(1:600,mag_data(:,y,2),'g')
+        %plot(1:600,mag_data(:,y,3),'b')
+        %plot(1:600,mag_data(:,y,4),'k')
         legend('B_{r}','B_{theta}','B_{phi}','B_{tot}')
         hold off
         

@@ -9,7 +9,7 @@ number_of_files = 181;
 length_of_window = 3600/6; 
 max_windows = 20;
 mag_is_1_sheath_is_0 = 0;
-avoid_boundary_offset = length_of_window/5;
+avoid_boundary_offset = 120;
 
 % formatSpec_w = ['%d-%02d-%02dT%02d:%02d:%02.2f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %8.3f %8.3f %10.3e %4d\t %12.3e %10.3e %10.3e\n'];
 [location_data] = get_location_data(); 
@@ -130,20 +130,20 @@ end
             %can calculate v temp and density for every window or as above
             %where all values are the same for windows attached to a
             %particular crossing
-            %if isnan(density) || isnan(T) || isnan(v_r_rel) || isnan(v_phi_rel)
+            if isnan(density) || isnan(T) || isnan(v_r_rel) || isnan(v_phi_rel)
                 v_r_rel = 1000*polyval(coeffs_v_r_rel,bound_LT_and_r(1,1));%convert m/s
                 if 2*bound_LT_and_r(1,1) >= split
                     coeffs_v_phi_rel = coeffs_v_phi_rel_dawn;
                 else
                     coeffs_v_phi_rel = coeffs_v_phi_rel_dusk;
                 end
-            %    v_phi_rel = 1000*polyval(coeffs_v_phi_rel,bound_LT_and_r(1,1));
-            %    density = polyval(coeffs_density,bound_LT_and_r(1,1))*(.001/6.022140857e23); %convert number density to mass density
-            %    T = 11600*polyval(coeffs_T,bound_LT_and_r(1,1)); %convert eV to K
-            %    modeled = modeled + 1;
-            %else
-            %    moment = moment + 1;
-            %end
+                v_phi_rel = 1000*polyval(coeffs_v_phi_rel,bound_LT_and_r(1,1));
+                density = polyval(coeffs_density,bound_LT_and_r(1,1))*(.001/6.022140857e23); %convert number density to mass density
+                T = 11600*polyval(coeffs_T,bound_LT_and_r(1,1)); %convert eV to K
+                modeled = modeled + 1;
+            else
+                moment = moment + 1;
+            end
 
             %my poor useless model (requires density and temp models)
             %[v_phi_rel, v_r_rel] = get_v_rel_sheath(bound_LT_and_r(2,1),2*pi*(bound_LT_and_r(1,1)/24)-pi);
@@ -364,7 +364,7 @@ end
 %mins10_mag = data;
 
 how_many_boundaries
-save('allmodel_10mins_sheath','allmodel_10mins_sheath');
+%save('momentmodel_15mins_sheath','momentmodel_15mins_sheath');
 
 %q per given local time as a function of window number from boundary
 %for i = 10:96
