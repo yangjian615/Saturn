@@ -49,7 +49,5 @@ else
 
     c = horzcat(mag_to_sheath,sheath_to_mag);
     crossings = transpose(sortrows(transpose(c),8));
-
-
 end
 end
