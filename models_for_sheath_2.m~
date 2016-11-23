@@ -3,7 +3,7 @@ function [density,temperature,v_r,v_phi] = models_for_sheath_2()
     boundaries = get_location_regions_boundary_data();
     crossings = crossings_of_interest(boundaries,0);
     %crossings = crossings_of_interest_2(boundaries);
-    %crossings = horzcat(crossings1,crossings2);
+    %crossings =horzcat(crossings1,crossings2);
     resolution_in_minutes = 30;
     slices = (24*60)/resolution_in_minutes;
     k = 60/resolution_in_minutes; 
@@ -103,7 +103,7 @@ function [density,temperature,v_r,v_phi] = models_for_sheath_2()
     p22 = polyfit(density_first+4:density_last-6,smooth_density(4:end-7),2);
     p3 = polyfit(v_r_first:v_r_last,smooth_vr,2);
     p4 = polyfit(v_phi_first:v_phi_last,smooth_vphi,3);
-    p44 = polyfit([7 8 9 10 24 38 39 40 41],[-200 -200 -200 -200 0 200 200 200 200],3);
+    p44 = polyfit([5 6 7 8 24 40 41 42 43],[-200 -200 -200 -200 0 200 200 200 200],3);
 
 
     d2 = avg_model_data_v_phi(v_phi_first+4:22);
@@ -158,6 +158,7 @@ function [density,temperature,v_r,v_phi] = models_for_sheath_2()
     plot(x1,y1)
     x1 = v_r_first:v_r_last;
     a = 0.5*p3(2)/p3(1)+24;
+    %y2 = p3(1)*(x1-0.5*p3(2)/p3(1)-24).^2 + p3(2)*(x1-0.5*p3(2)/p3(1)-24) + p3(3);
     y2 = p3(1)*x1.^2 + (p3(2) - 2*p3(1)*a)*x1 + p3(1)*a^2-p3(2)*a+p3(3);
     p3(2) = p3(2) - 2*p3(1)*a;
     p3(3) = p3(1)*a^2-p3(2)*a+p3(3);
@@ -176,10 +177,11 @@ function [density,temperature,v_r,v_phi] = models_for_sheath_2()
     y2 = polyval(p2,x1);
     plot(x1,y2)
     x1 = density_first:density_last;
-    a = 0.5*p22(2)/p22(1)+24;
-    y2 = p22(1)*x1.^2 + (p22(2) - 2*p22(1)*a)*x1 + p22(1)*a^2-p22(2)*a+p22(3);
-    p22(2) = p22(2) - 2*p22(1)*a;
-    p22(3) = p22(1)*a^2-p22(2)*a+p22(3);
+    a = 0.5*p2(2)/p2(1)+24;
+    %y2 = p22(1)*(x1-0.5*p22(2)/p22(1)-24).^2 + p22(2)*(x1-0.5*p22(2)/p22(1)-24) + p22(3);
+    y2 = p2(1)*x1.^2 + (p2(2) - 2*p2(1)*a)*x1 + p2(1)*a^2-p2(2)*a+p2(3);
+    p2(2) = p2(2) - 2*p2(1)*a;
+    p2(3) = p2(1)*a^2-p2(2)*a+p2(3);
     plot(x1,y2,'g')
     ax = gca;
     ax.XTick = [0 10 20 30 40 50];
@@ -197,6 +199,7 @@ function [density,temperature,v_r,v_phi] = models_for_sheath_2()
     plot(x1,y2)
     x1 = temp_first:temp_last;
     a = 0.5*p1(2)/p1(1)+24;
+    %y2 = p1(1)*(x1-a).^2 + p1(2)*(x1-a) + p1(3);
     y2 = p1(1)*x1.^2 + (p1(2) - 2*p1(1)*a)*x1 + p1(1)*a^2-p1(2)*a+p1(3);
     p1(2) = p1(2) - 2*p1(1)*a;
     p1(3) = p1(1)*a^2-p1(2)*a+p1(3);
@@ -213,6 +216,6 @@ function [density,temperature,v_r,v_phi] = models_for_sheath_2()
     %line([0 40],[0,0],'Color','r')
 
     temperature = p1;
-    density = p22;
+    density = p2;
     v_r = p3;
     v_phi = p44;

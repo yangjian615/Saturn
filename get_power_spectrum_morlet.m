@@ -75,9 +75,9 @@ function [f, power_spectrum] = get_power_spectrum_morlet(B_fluctuation_perp, B_t
 % %     power_spectrum = power_spectrum_scaling_constant*power_spectrum_tot;
 %     power_spectrum = power_spectrum_tot;    
 %---------------------------------------------------------------------------------------------------------------------------    
-    [f, power_spectrum_tot_r, N] = power_spectrum_morlet(B_fluctuation_perp(1,:), delta_t);
-    [f, power_spectrum_tot_theta, N] = power_spectrum_morlet(B_fluctuation_perp(2,:), delta_t);
-    [f, power_spectrum_tot_phy, N] = power_spectrum_morlet(B_fluctuation_perp(3,:), delta_t);
+    [f, power_spectrum_tot_r,N] = power_spectrum_morlet(B_fluctuation_perp(1,:),delta_t);
+    [f, power_spectrum_tot_theta,N] = power_spectrum_morlet(B_fluctuation_perp(2,:),delta_t);
+    [f, power_spectrum_tot_phy,N] = power_spectrum_morlet(B_fluctuation_perp(3,:),delta_t);
     
     power_spectrum_tot = sqrt(power_spectrum_tot_r.^2 + power_spectrum_tot_theta.^2 + power_spectrum_tot_phy.^2);
     

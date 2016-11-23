@@ -134,6 +134,9 @@ end
             %constant density temp and v
             %[density,T,v_r_rel,v_phi_rel] = find_moment_data(start+j-1,ordered_crossings,moments);
 
+            %can calculate v temp and density for every window or as above
+            %where all values are the same for windows attached to a
+            %particular crossing
             %if isnan(density) || isnan(T) || isnan(v_r_rel) || isnan(v_phi_rel)
                 v_r_rel = 1000*polyval(coeffs_v_r_rel,bound_LT_and_r(1,1));%convert m/s
                 v_phi_rel = 1000*polyval(coeffs_v_phi_rel,bound_LT_and_r(1,1));
@@ -160,7 +163,7 @@ end
                     mag_data_to_analyze = magnetometer_data(:, (index_of_crossing - avoid_boundary_offset) -...
                         (min([max_windows,windows])-k+1)*length_of_window:(index_of_crossing - avoid_boundary_offset) -...
                         (min([max_windows,windows])-k)*length_of_window-1);
-                    %region = 'Sheath to Magnetosphere ';
+                    region = 'Sheath to Magnetosphere ';
                     region = 'Sheath to Solar Wind ';
                     position = min([max_windows,windows])-k+1;
                     do_it = true;
@@ -349,8 +352,8 @@ end
 %save('allmodel_10mins_sheath','allmodel_10mins_sheath');
 allmodel_10mins_shock = data;
 save('allmodel_10mins_shock','allmodel_10mins_shock')
-%allmodel_10mins_sheath = load('all_model_10mins_sheath')
-
+%all_model_10mins_sheath = load('all_model_10mins_sheath')
+plot_data_2(allmodel_10mins_sheath,allmodel_10mins_shock,20)
 %momentmodel_10mins_sheath = data;
 %mins15_mag = data;
 %mins10_mag = data;

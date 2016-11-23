@@ -1,8 +1,6 @@
-function [f, power_spectrum] = power_spectrum_fft(magnetometer_data)
+function [f, power_spectrum, Num_Unique_Pts] = power_spectrum_fft(magnetometer_data, delta_t)
     
     magnetometer_data_to_analyze = magnetometer_data - mean(magnetometer_data);
-    
-    delta_t = 1;
     f_sample = 1/delta_t;
     
     [n, size_of_data] = size(magnetometer_data_to_analyze);
